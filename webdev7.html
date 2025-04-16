@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced DOM Manipulation with CSS3 & Storage</title>
+    <style>
+        /* Base Styles */
+        :root {
+            --primary-color: #4285f4;
+            --secondary-color: #3367d6;
+            --accent-color: #fbbc05;
+            --success-color: #34a853;
+            --error-color: #ea4335;
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --card-bg: #f5f5f5;
+            --animation-speed: 0.5s;
+        }
+
+        /* Dark Mode Variables */
+        .dark-mode {
+            --primary-color: #8ab4f8;
+            --secondary-color: #669df6;
+            --accent-color: #fdd663;
+            --success-color: #81c995;
+            --error-color: #f28b82;
+            --bg-color: #202124;
+            --text-color: #e8eaed;
+            --card-bg: #303134;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        h1 {
+            position: relative;
+            display: inline-block;
+        }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 3px;
+            bottom: -5px;
+            left: 0;
+            background-color: var(--accent-color);
+            transition: width 0.5s ease;
+        }
+
+        h1:hover::after {
+            width: 100%;
+        }
+
+        section {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-panel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 16px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+            transform: scale(1.05);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* Button animation on click */
+        button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.7);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%, -50%);
+            transform-origin: 50% 50%;
+        }
+
+        button:focus:not(:active)::after {
+            animation: ripple 0.6s ease-out;
+        }
+
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0) translate(-50%, -50%);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(20, 20) translate(-50%, -50%);
+                opacity: 0;
+            }
+        }
+
+        .content-box {
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            min-height: 100px;
+            transition: all 0.3s ease;
+        }
+
+        .added-item {
+            background-color: rgba(var(--success-color), 0.1);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border-left: 4px solid var(--success-color);
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            animation: slideIn 0.5s ease forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .removing {
+            animation: slideOut 0.5s ease forwards;
+        }
+
+        @keyframes slideOut {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+        }
+
+        /* Preferences Panel Styles */
+        .preferences {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .preference-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+            margin-right: 15px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .speed-control label {
+            margin-right: 10px;
+        }
+
+        #animationSpeed {
+            flex: 1;
+        }
+
+        /* Fade in animation for sections */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        section {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        section:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        section:nth-child(2) {
+            animation-delay: 0.3s;
+        }
+
+        section:nth-child(3) {
+            animation-delay: 0.5s;
+        }
+
+        /* Theme toggle button animation */
+        .theme-toggle {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(45deg);
+        }
+
+        .theme-toggle i {
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        /* Sun and moon icons using CSS */
+        .sun {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .moon {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background: transparent;
+            border-radius: 50%;
+            box-shadow: 5px -2px 0 0 var(--text-color);
+            transform: rotate(-45deg);
+            transition: all 0.3s ease;
+        }
+
+        .dark-mode .sun {
+            transform: scale(0);
+        }
+
+        .dark-mode .moon {
+            box-shadow: 5px -2px 0 0 var(--accent-color);
+        }
+
+        #shake {
+            animation: none;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .shaking {
+            animation: shake 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Advanced CSS3 & JavaScript Demo</h1>
+        <p>Experience smooth animations, transitions, and data persistence</p>
+        <div class="theme-toggle" id="themeToggle">
+            <div class="sun"></div>
+            <div class="moon"></div>
+        </div>
+    </header>
+
+    <main>
+        <div class="preferences">
+            <h2>User Preferences</h2>
+            <p>Your preferences will be saved between visits</p>
+
+            <div class="preference-item">
+                <label class="switch">
+                    <input type="checkbox" id="darkModeToggle">
+                    <span class="slider"></span>
+                </label>
+                <span>Dark Mode</span>
+            </div>
+
+            <div class="preference-item">
+                <label class="switch">
+                    <input type="checkbox" id="animationsToggle" checked>
+                    <span class="slider"></span>
+                </label>
+                <span>Enable Animations</span>
+            </div>
+
+            <div class="speed-control">
+                <label for="animationSpeed">Animation Speed:</label>
+                <input type="range" id="animationSpeed" min="0.1" max="2" step="0.1" value="0.5">
+                <span id="speedValue">0.5s</span>
+            </div>
+        </div>
+
+        <section>
+            <h2>Text Content Manipulation</h2>
+            <div class="control-panel">
+                <button id="changeTextBtn">Change Text</button>
+                <button id="resetTextBtn">Reset Text</button>
+                <button id="shake">Shake Effect</button>
+            </div>
+            <div id="textContent" class="content-box">
+                <p>This is the original text content that will be changed when you click the button above.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>CSS Style Modification</h2>
+            <div class="control-panel">
+                <button id="changeColorBtn">Change Colors</button>
+                <button id="changeFontBtn">Change Font Size</button>
+                <button id="resetStyleBtn">Reset Styles</button>
+            </div>
+            <div id="styleContent" class="content-box">
+                <p>This content's appearance will change when you click the style buttons above.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Adding & Removing Elements</h2>
+            <div class="control-panel">
+                <button id="addElementBtn">Add Element</button>
+                <button id="removeElementBtn">Remove Last</button>
+                <button id="clearElementsBtn">Clear All</button>
+            </div>
+            <div id="elementContainer" class="content-box">
+                <p>Elements will be added or removed here when you click the buttons above.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Created with CSS3 animations and transitions, and localStorage for data persistence</p>
+    </footer>
+
+    <script>
+        // Wait for the DOM to be fully loaded before manipulating it
+        document.addEventListener('DOMContentLoaded', function() {
+            // User Preferences with localStorage
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const animationsToggle = document.getElementById('animationsToggle');
+            const animationSpeed = document.getElementById('animationSpeed');
+            const speedValue = document.getElementById('speedValue');
+            const themeToggle = document.getElementById('themeToggle');
+
+            // Load saved preferences
+            function loadPreferences() {
+                // Check for dark mode preference
+                if (localStorage.getItem('darkMode') === 'true') {
+                    document.body.classList.add('dark-mode');
+                    darkModeToggle.checked = true;
+                }
+
+                // Load animation toggle preference
+                if (localStorage.getItem('animations') === 'false') {
+                    document.documentElement.style.setProperty('--animation-speed', '0s');
+                    animationsToggle.checked = false;
+                }
+
+                // Load animation speed
+                const savedSpeed = localStorage.getItem('animationSpeed');
+                if (savedSpeed) {
+                    animationSpeed.value = savedSpeed;
+                    speedValue.textContent = savedSpeed + 's';
+                    document.documentElement.style.setProperty('--animation-speed', savedSpeed + 's');
+                }
+            }
+
+            // Save preferences to localStorage
+            function savePreference(key, value) {
+                localStorage.setItem(key, value);
+            }
+
+            // Event listeners for preference changes
+            darkModeToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    document.body.classList.add('dark-mode');
+                    savePreference('darkMode', 'true');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    savePreference('darkMode', 'false');
+                }
+            });
+
+            themeToggle.addEventListener('click', function() {
+                darkModeToggle.checked = !darkModeToggle.checked;
+
+                // Trigger the change event
+                const event = new Event('change');
+                darkModeToggle.dispatchEvent(event);
+            });
+
+            animationsToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    document.documentElement.style.setProperty('--animation-speed', animationSpeed.value + 's');
+                    savePreference('animations', 'true');
+                } else {
+                    document.documentElement.style.setProperty('--animation-speed', '0s');
+                    savePreference('animations', 'false');
+                }
+            });
+
+            animationSpeed.addEventListener('input', function() {
+                const speed = this.value;
+                speedValue.textContent = speed + 's';
+
+                if (animationsToggle.checked) {
+                    document.documentElement.style.setProperty('--animation-speed', speed + 's');
+                }
+
+                savePreference('animationSpeed', speed);
+            });
+
+            // Text Content Manipulation
+            const changeTextBtn = document.getElementById('changeTextBtn');
+            const resetTextBtn = document.getElementById('resetTextBtn');
+            const textContent = document.getElementById('textContent');
+            const originalText = textContent.innerHTML;
+
+            changeTextBtn.addEventListener('click', function() {
+                textContent.innerHTML = `
+                    <p>This text has been <strong>dynamically changed</strong> using JavaScript!</p>
+                    <p>You can reset it by clicking the Reset Text button.</p>
+                `;
+            });
+
+            resetTextBtn.addEventListener('click', function() {
+                textContent.innerHTML = originalText;
+            });
+
+            // CSS Style Modification
+            const changeColorBtn = document.getElementById('changeColorBtn');
+            const changeFontBtn = document.getElementById('changeFontBtn');
+            const resetStyleBtn = document.getElementById('resetStyleBtn');
+            const styleContent = document.getElementById('styleContent');
+
+            let isColorChanged = false;
+            let isFontChanged = false;
+
+            changeColorBtn.addEventListener('click', function() {
+                if (!isColorChanged) {
+                    styleContent.style.backgroundColor = '#e3f2fd';
+                    styleContent.style.color = '#0d47a1';
+                    styleContent.style.borderColor = '#2196f3';
+                    isColorChanged = true;
+                } else {
+                    styleContent.style.backgroundColor = '#fff3e0';
+                    styleContent.style.color = '#bf360c';
+                    styleContent.style.borderColor = '#ff9800';
+                    isColorChanged = false;
+                }
+            });
+
+            changeFontBtn.addEventListener('click', function() {
+                if (!isFontChanged) {
+                    styleContent.style.fontSize = '1.2em';
+                    styleContent.style.fontWeight = 'bold';
+                    styleContent.style.letterSpacing = '1px';
+                    isFontChanged = true;
+                } else {
+                    styleContent.style.fontSize = '1em';
+                    styleContent.style.fontWeight = 'normal';
+                    styleContent.style.letterSpacing = 'normal';
+                    isFontChanged = false;
+                }
+            });
+
+            resetStyleBtn.addEventListener('click', function() {
+                styleContent.removeAttribute('style');
+                isColorChanged = false;
+                isFontChanged = false;
+            });
+
+            // Adding & Removing Elements with animation
+            const addElementBtn = document.getElementById('addElementBtn');
+            const removeElementBtn = document.getElementById('removeElementBtn');
+            const clearElementsBtn = document.getElementById('clearElementsBtn');
+            const elementContainer = document.getElementById('elementContainer');
+
+            let itemCount = 0;
+
+            // Retrieve the item count from localStorage
+            if (localStorage.getItem('itemCount')) {
+                itemCount = parseInt(localStorage.getItem('itemCount'));
+
+                // Restore items if they exist
+                const savedItems = JSON.parse(localStorage.getItem('items') || '[]');
+                savedItems.forEach(item => {
+                    const newElement = document.createElement('div');
+                    newElement.className = 'added-item';
+                    newElement.innerHTML = item;
+                    elementContainer.appendChild(newElement);
+                });
+            }
+
+            // Function to save items to localStorage
+            function saveItems() {
+                const items = [];
+                document.querySelectorAll('.added-item').forEach(item => {
+                    items.push(item.innerHTML);
+                });
+                localStorage.setItem('items', JSON.stringify(items));
+                localStorage.setItem('itemCount', itemCount);
+            }
+
+            addElementBtn.addEventListener('click', function() {
+                itemCount++;
+                const newElement = document.createElement('div');
+                newElement.className = 'added-item';
+                newElement.innerHTML = `<p>Item #${itemCount} - Added at ${new Date().toLocaleTimeString()}</p>`;
+                elementContainer.appendChild(newElement);
+
+                // Save to localStorage
+                saveItems();
+            });
+
+            removeElementBtn.addEventListener('click', function() {
+                const addedItems = document.querySelectorAll('.added-item');
+                if (addedItems.length > 0) {
+                    const lastItem = addedItems[addedItems.length - 1];
+                    lastItem.classList.add('removing');
+
+                    // Wait for animation to complete before actually removing
+                    setTimeout(() => {
+                        elementContainer.removeChild(lastItem);
+                        saveItems();
+                    }, 500);
+                }
+            });
+
+            clearElementsBtn.addEventListener('click', function() {
+                const addedItems = document.querySelectorAll('.added-item');
+
+                // Add removing class to all items with staggered delays
+                addedItems.forEach((item, index) => {
+                    setTimeout(() => {
+                        item.classList.add('removing');
+                    }, index * 100);
+                });
+
+                // Wait for animations to complete before removing all
+                setTimeout(() => {
+                    addedItems.forEach(item => {
+                        elementContainer.removeChild(item);
+                    });
+                    itemCount = 0;
+                    saveItems();
+                }, addedItems.length * 100 + 500);
+            });
+
+            // Shake Animation
+            const shakeButton = document.getElementById('shake');
+            shakeButton.addEventListener('click', function() {
+                textContent.classList.add('shaking');
+
+                // Remove class after animation completes
+                setTimeout(() => {
+                    textContent.classList.remove('shaking');
+                }, 500);
+            });
+
+            // Load saved preferences when page loads
+            loadPreferences();
+        });
+    </script>
+</body>
+</html>
