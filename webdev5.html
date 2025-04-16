@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript DOM Manipulation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            transition: background-color 0.5s ease;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        section {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .control-panel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 8px 16px;
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #3367d6;
+        }
+
+        .content-box {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            min-height: 100px;
+        }
+
+        .added-item {
+            background-color: #e8f5e9;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 4px solid #4caf50;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>JavaScript DOM Manipulation Demo</h1>
+        <p>This page demonstrates various JavaScript DOM manipulation techniques</p>
+    </header>
+
+    <main>
+        <section>
+            <h2>Text Content Manipulation</h2>
+            <div class="control-panel">
+                <button id="changeTextBtn">Change Text</button>
+                <button id="resetTextBtn">Reset Text</button>
+            </div>
+            <div id="textContent" class="content-box">
+                <p>This is the original text content that will be changed when you click the button above.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>CSS Style Modification</h2>
+            <div class="control-panel">
+                <button id="changeColorBtn">Change Background</button>
+                <button id="changeFontBtn">Change Font Size</button>
+                <button id="resetStyleBtn">Reset Styles</button>
+            </div>
+            <div id="styleContent" class="content-box">
+                <p>This content's appearance will change when you click the style buttons above.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Adding & Removing Elements</h2>
+            <div class="control-panel">
+                <button id="addElementBtn">Add Element</button>
+                <button id="removeElementBtn">Remove Last Element</button>
+                <button id="clearElementsBtn">Clear All</button>
+            </div>
+            <div id="elementContainer" class="content-box">
+                <p>Elements will be added or removed here when you click the buttons above.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Created with JavaScript DOM manipulation techniques</p>
+    </footer>
+
+    <script>
+        // Wait for the DOM to be fully loaded before manipulating it
+        document.addEventListener('DOMContentLoaded', function() {
+            // Text Content Manipulation
+            const changeTextBtn = document.getElementById('changeTextBtn');
+            const resetTextBtn = document.getElementById('resetTextBtn');
+            const textContent = document.getElementById('textContent');
+            const originalText = textContent.innerHTML;
+
+            changeTextBtn.addEventListener('click', function() {
+                textContent.innerHTML = `
+                    <p>This text has been <strong>dynamically changed</strong> using JavaScript!</p>
+                    <p>You can reset it by clicking the Reset Text button.</p>
+                `;
+            });
+
+            resetTextBtn.addEventListener('click', function() {
+                textContent.innerHTML = originalText;
+            });
+
+            // CSS Style Modification
+            const changeColorBtn = document.getElementById('changeColorBtn');
+            const changeFontBtn = document.getElementById('changeFontBtn');
+            const resetStyleBtn = document.getElementById('resetStyleBtn');
+            const styleContent = document.getElementById('styleContent');
+
+            let isColorChanged = false;
+            let isFontChanged = false;
+
+            changeColorBtn.addEventListener('click', function() {
+                if (!isColorChanged) {
+                    styleContent.style.backgroundColor = '#e3f2fd';
+                    styleContent.style.color = '#0d47a1';
+                    styleContent.style.borderColor = '#2196f3';
+                    isColorChanged = true;
+                } else {
+                    styleContent.style.backgroundColor = '#fff3e0';
+                    styleContent.style.color = '#bf360c';
+                    styleContent.style.borderColor = '#ff9800';
+                    isColorChanged = false;
+                }
+            });
+
+            changeFontBtn.addEventListener('click', function() {
+                if (!isFontChanged) {
+                    styleContent.style.fontSize = '1.2em';
+                    styleContent.style.fontWeight = 'bold';
+                    styleContent.style.letterSpacing = '1px';
+                    isFontChanged = true;
+                } else {
+                    styleContent.style.fontSize = '1em';
+                    styleContent.style.fontWeight = 'normal';
+                    styleContent.style.letterSpacing = 'normal';
+                    isFontChanged = false;
+                }
+            });
+
+            resetStyleBtn.addEventListener('click', function() {
+                styleContent.removeAttribute('style');
+                isColorChanged = false;
+                isFontChanged = false;
+            });
+
+            // Adding & Removing Elements
+            const addElementBtn = document.getElementById('addElementBtn');
+            const removeElementBtn = document.getElementById('removeElementBtn');
+            const clearElementsBtn = document.getElementById('clearElementsBtn');
+            const elementContainer = document.getElementById('elementContainer');
+
+            let itemCount = 0;
+
+            addElementBtn.addEventListener('click', function() {
+                itemCount++;
+                const newElement = document.createElement('div');
+                newElement.className = 'added-item';
+                newElement.innerHTML = `<p>Item #${itemCount} - Added at ${new Date().toLocaleTimeString()}</p>`;
+                elementContainer.appendChild(newElement);
+            });
+
+            removeElementBtn.addEventListener('click', function() {
+                const addedItems = document.querySelectorAll('.added-item');
+                if (addedItems.length > 0) {
+                    elementContainer.removeChild(addedItems[addedItems.length - 1]);
+                }
+            });
+
+            clearElementsBtn.addEventListener('click', function() {
+                const addedItems = document.querySelectorAll('.added-item');
+                addedItems.forEach(item => {
+                    elementContainer.removeChild(item);
+                });
+                itemCount = 0;
+            });
+        });
+    </script>
+</body>
+</html>
